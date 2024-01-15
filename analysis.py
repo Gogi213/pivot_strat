@@ -46,15 +46,14 @@ def plot_breaks(df, fig, pivot_highs, pivot_lows, volume_thresh):
     return fig
 
 def calculate_tp(price, nATR):
-    return price + (price * 2 * nATR)
+    return price + (price * 3 * nATR)
 
 def calculate_sl(price, nATR):
     return price - (price * (nATR / 2))
 
 
-def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', initial_deposit=100):
+def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=1000):
     trades = []
-    balance = initial_deposit
     pivot_highs = find_pivot_high(df, left_bars, right_bars)
     pivot_lows = find_pivot_low(df, left_bars, right_bars)
 
@@ -64,12 +63,14 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', initial_depos
             entry_price = df['Open'][i]
             tp = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
             sl = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
+            is_long_position = False
 
         elif pivot_lows[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] > df['Open'][i - 1]:
             # Логика для лонг позиции
             entry_price = df['Open'][i]
             tp = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
             sl = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
+            is_long_position = True
 
         else:
             continue
@@ -77,12 +78,16 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', initial_depos
         for j in range(i + 1, len(df)):
             if df['High'][j] >= tp or df['Low'][j] <= sl:
                 exit_price = df['Close'][j]
-                profit_or_loss = exit_price - entry_price
-                balance += profit_or_loss  # Обновляем баланс после каждой сделки
-                trades.append({'entry': entry_price, 'exit': exit_price, 'pnl': profit_or_loss, 'balance': balance})
+                if is_long_position:
+                    profit_or_loss = (exit_price / entry_price - 1) * deposit
+                else:  # Шорт позиция
+                    profit_or_loss = (1 - exit_price / entry_price) * deposit
+
+                trades.append({'entry': entry_price, 'exit': exit_price, 'pnl': profit_or_loss})
                 break
 
     return trades
+
 
 
 
