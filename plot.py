@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 
 def plot_support_resistance_with_annotations(df, pivot_highs, pivot_lows, symbol):
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
-                        vertical_spacing=0.03, subplot_titles=(symbol, 'nATR'),
+                        vertical_spacing=0.03, subplot_titles=(symbol, 'sub'),
                         row_heights=[0.7, 0.3])
 
     # Добавление свечного графика
@@ -15,15 +15,12 @@ def plot_support_resistance_with_annotations(df, pivot_highs, pivot_lows, symbol
                                  low=df['Low'], close=df['Close'])
     fig.add_trace(candlestick, row=1, col=1)
 
-    # Добавление графика nATR
-    fig.add_trace(go.Bar(x=df.index, y=df['nATR'], marker_color='blue'), row=2, col=1)
-
     # Отображение горизонтальных линий для pivot highs
     last_high = None
     for high in pivot_highs:
         if high[1] is not None and high[1] != last_high:
             fig.add_shape(type='line',
-                          x0=high[0], y0=high[1], x1=df.index[min(len(df)-1, df.index.get_loc(high[0]) + 35)], y1=high[1],
+                          x0=high[0], y0=high[1], x1=df.index[min(len(df)-1, df.index.get_loc(high[0]) + 10)], y1=high[1],
                           line=dict(color='Green',),
                           xref='x', yref='y',
                           row=1, col=1)
@@ -42,13 +39,12 @@ def plot_support_resistance_with_annotations(df, pivot_highs, pivot_lows, symbol
 
     # Обновление макета графика
     fig.update_layout(
-        height=800, width=1200, title_text="График с nATR",
+        height=800, width=1200, title_text="График",
         showlegend=False,
         margin=dict(l=50, r=50, b=100, t=100, pad=4)
     )
-    fig.update_xaxes(title_text="Дата", row=2, col=1)
-    fig.update_yaxes(title_text="Цена", row=1, col=1)
-    fig.update_yaxes(title_text="nATR", row=2, col=1)
+    fig.update_xaxes(title_text="Дата")
+    fig.update_yaxes(title_text="Цена")
 
     return fig
 

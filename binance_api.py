@@ -5,7 +5,7 @@ from cache_manager import CacheManager
 
 cache_manager = CacheManager()
 
-def get_top_futures_pairs(base_currency='USDT', volume_threshold=150000000):
+def get_top_futures_pairs(base_currency='USDT', volume_threshold=100000000):
     url = "https://fapi.binance.com/fapi/v1/ticker/24hr"
     response = requests.get(url)
     if response.status_code != 200:
@@ -17,7 +17,7 @@ def get_top_futures_pairs(base_currency='USDT', volume_threshold=150000000):
     return [pair['symbol'] for pair in pairs]
 
 
-def calculate_natr(df, period=210):
+def calculate_natr(df, period=28):
     high_low = df['High'] - df['Low']
     high_close = (df['High'] - df['Close'].shift()).abs()
     low_close = (df['Low'] - df['Close'].shift()).abs()

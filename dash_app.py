@@ -7,7 +7,7 @@ from analysis import find_pivot_high, find_pivot_low, calculate_ema_osc
 
 app = dash.Dash(__name__)
 
-volume_threshold = 150000000
+volume_threshold = 100000000
 symbols = get_top_futures_pairs(volume_threshold=volume_threshold)
 
 app.layout = html.Div([
