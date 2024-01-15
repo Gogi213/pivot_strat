@@ -45,39 +45,39 @@ def plot_breaks(df, fig, pivot_highs, pivot_lows, volume_thresh):
                                arrowhead=1, yshift=-10)
     return fig
 
+def calculate_tp(price, nATR):
+    return price + (price * 2 * nATR)
+
+def calculate_sl(price, nATR):
+    return price - (price * (nATR / 2))
 
 
+def emulate_trading(df, nATR_column='nATR'):
+    trades = []
+    for i in range(2, len(df)):
+        # Проверка условий для входа в позицию
+        if условие_для_pivot_high:
+            # Логика для шорт позиции
+            entry_price = df['Open'][i]  # Вход по открытию следующей свечи
+            tp = calculate_sl(entry_price, df[nATR_column][i - 2])  # Используем SL как TP для шорта
+            sl = calculate_tp(entry_price, df[nATR_column][i - 2])  # Используем TP как SL для шорта
 
+        elif условие_для_pivot_low:
+            # Логика для лонг позиции
+            entry_price = df['Open'][i]  # Вход по открытию следующей свечи
+            tp = calculate_tp(entry_price, df[nATR_column][i - 2])
+            sl = calculate_sl(entry_price, df[nATR_column][i - 2])
 
+        else:
+            continue
 
+        # Отслеживание позиции и определение выхода
+        for j in range(i + 1, len(df)):
+            if df['High'][j] >= tp or df['Low'][j] <= sl:
+                exit_price = df['Close'][j]  # Выход по закрытию свечи
+                profit_or_loss = exit_price - entry_price
+                trades.append({'entry': entry_price, 'exit': exit_price, 'pnl': profit_or_loss})
+                break
 
+    return trades
 
-
-# Функция для отслеживания позиции (закомментирована для будущего использования)
-# def emulate_position_tracking(df, breakout_candles, nATR_column='nATR'):
-#     results = []
-#     for pair, breakout_idx in breakout_candles:
-#         test_price = pair[1][1]  # Цена нижнего теста
-#         nATR_value = df.at[breakout_idx, nATR_column]
-#         tp = test_price + test_price * nATR_value
-#         sl = test_price - test_price * (nATR_value / 2)
-#         outcome = None
-#         profit_loss = 0
-#         for i in range(breakout_idx + 1, len(df)):
-#             high_price = df.at[i, 'High']
-#             low_price = df.at[i, 'Low']
-#             if high_price >= tp:
-#                 outcome = 'Successful'
-#                 profit_loss = nATR_value * 100
-#                 break
-#             elif low_price <= sl:
-#                 outcome = 'Unsuccessful'
-#                 profit_loss = (-nATR_value / 2) * 100
-#                 break
-#         results.append({
-#             'setup': pair,
-#             'breakout_idx': breakout_idx,
-#             'outcome': outcome,
-#             'profit_loss': profit_loss
-#         })
-#     return results
