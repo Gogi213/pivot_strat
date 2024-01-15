@@ -52,37 +52,39 @@ def calculate_sl(price, nATR):
     return price - (price * (nATR / 2))
 
 
-def emulate_trading(df, left_bars, right_bars, nATR_column='nATR'):
+def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', initial_deposit=100):
     trades = []
+    balance = initial_deposit
     pivot_highs = find_pivot_high(df, left_bars, right_bars)
     pivot_lows = find_pivot_low(df, left_bars, right_bars)
 
-    for i in range(2, len(df)):
-        # Проверка условий для входа в позицию
-        if pivot_highs[i - 2][1] is not None and df['Close'][i - 1] < df['Open'][i - 1]:
+    for i in range(left_bars + right_bars, len(df)):
+        if pivot_highs[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] < df['Open'][i - 1]:
             # Логика для шорт позиции
-            entry_price = df['Open'][i]  # Вход по открытию следующей свечи
-            tp = calculate_sl(entry_price, df[nATR_column][i - 2])  # Используем SL как TP для шорта
-            sl = calculate_tp(entry_price, df[nATR_column][i - 2])  # Используем TP как SL для шорта
+            entry_price = df['Open'][i]
+            tp = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
+            sl = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
 
-        elif pivot_lows[i - 2][1] is not None and df['Close'][i - 1] > df['Open'][i - 1]:
+        elif pivot_lows[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] > df['Open'][i - 1]:
             # Логика для лонг позиции
-            entry_price = df['Open'][i]  # Вход по открытию следующей свечи
-            tp = calculate_tp(entry_price, df[nATR_column][i - 2])
-            sl = calculate_sl(entry_price, df[nATR_column][i - 2])
+            entry_price = df['Open'][i]
+            tp = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
+            sl = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
 
         else:
             continue
 
-        # Отслеживание позиции и определение выхода
         for j in range(i + 1, len(df)):
             if df['High'][j] >= tp or df['Low'][j] <= sl:
-                exit_price = df['Close'][j]  # Выход по закрытию свечи
+                exit_price = df['Close'][j]
                 profit_or_loss = exit_price - entry_price
-                trades.append({'entry': entry_price, 'exit': exit_price, 'pnl': profit_or_loss})
+                balance += profit_or_loss  # Обновляем баланс после каждой сделки
+                trades.append({'entry': entry_price, 'exit': exit_price, 'pnl': profit_or_loss, 'balance': balance})
                 break
 
     return trades
+
+
 
 
 
