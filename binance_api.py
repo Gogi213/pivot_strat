@@ -17,7 +17,7 @@ def get_top_futures_pairs(base_currency='USDT', volume_threshold=100000000):
     return [pair['symbol'] for pair in pairs]
 
 
-def calculate_natr(df, period=28):
+def calculate_natr(df, period=14):
     high_low = df['High'] - df['Low']
     high_close = (df['High'] - df['Close'].shift()).abs()
     low_close = (df['Low'] - df['Close'].shift()).abs()
