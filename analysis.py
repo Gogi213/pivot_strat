@@ -52,10 +52,14 @@ def calculate_sl(price, nATR):
     return price - (price * (nATR / 2))
 
 
-def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=1000):
+def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, leverage=10):
     trades = []
     pivot_highs = find_pivot_high(df, left_bars, right_bars)
     pivot_lows = find_pivot_low(df, left_bars, right_bars)
+
+    # Комиссии
+    commission_limit = 0.02 / 100  # Комиссия за лимитный ордер (0.02%)
+    commission_market = 0.055 / 100  # Комиссия за рыночный ордер (0.055%)
 
     for i in range(left_bars + right_bars, len(df)):
         if pivot_highs[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] < df['Open'][i - 1]:
@@ -78,15 +82,21 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=1000)
         for j in range(i + 1, len(df)):
             if df['High'][j] >= tp or df['Low'][j] <= sl:
                 exit_price = df['Close'][j]
+                position_size = deposit * leverage
                 if is_long_position:
-                    profit_or_loss = (exit_price / entry_price - 1) * deposit
+                    profit_or_loss = (exit_price / entry_price - 1) * position_size
                 else:  # Шорт позиция
-                    profit_or_loss = (1 - exit_price / entry_price) * deposit
+                    profit_or_loss = (1 - exit_price / entry_price) * position_size
+
+                # Учет комиссий
+                profit_or_loss -= position_size * commission_market  # Комиссия на вход
+                profit_or_loss -= position_size * commission_limit   # Комиссия на выход
 
                 trades.append({'entry': entry_price, 'exit': exit_price, 'pnl': profit_or_loss})
                 break
 
     return trades
+
 
 
 
