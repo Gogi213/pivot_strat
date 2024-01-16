@@ -1,3 +1,4 @@
+//js
 function initGraphInteractions(graphDiv) {
     graphDiv.onmousedown = function (event) {
         if (event.target.classList.contains('yaxislayer')) {

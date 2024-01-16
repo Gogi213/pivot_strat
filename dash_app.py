@@ -53,17 +53,15 @@ def update_graph_and_table(*args):
     total_profit = trades_df['pnl'].sum()
     profit_factor = total_profit / -trades_df[trades_df['pnl'] < 0]['pnl'].sum() if unsuccessful_trades > 0 else 'inf'
 
-    # Создание таблицы статистики
-    table = html.Table([
-        html.Thead(html.Tr([html.Th("Метрика"), html.Th("Значение")])),
-        html.Tbody([
-            html.Tr([html.Td("Всего сделок"), html.Td(total_trades)]),
-            html.Tr([html.Td("Успешных сделок"), html.Td(successful_trades)]),
-            html.Tr([html.Td("Неуспешных сделок"), html.Td(unsuccessful_trades)]),
-            html.Tr([html.Td("Winrate"), html.Td(f"{winrate:.2%}")]),
-            html.Tr([html.Td("Доход"), html.Td(total_profit)]),
-            html.Tr([html.Td("Профит фактор"), html.Td(profit_factor)])
-        ])
-    ])
+    # Создание компактной таблицы статистики
+    table = html.Div([
+        html.Div(f"Всего сделок: {total_trades}", className="table-stat"),
+        html.Div(f"Успешных сделок: {successful_trades}", className="table-stat"),
+        html.Div(f"Неуспешных сделок: {unsuccessful_trades}", className="table-stat"),
+        html.Div(f"Winrate: {winrate:.2%}", className="table-stat"),
+        html.Div(f"Доход: {total_profit}", className="table-stat"),
+        html.Div(f"Профит фактор: {profit_factor}", className="table-stat")
+    ], className="statistics-table")
 
     return [graph, table]
+
