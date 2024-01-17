@@ -1,9 +1,11 @@
 # dash_app.py
-from dash import html, dcc, Input, Output
+from dash import html, dcc, Input, Output, dash_table
 import dash
+
+
 from binance_api import get_top_futures_pairs, get_historical_futures_data
 import plot
-from analysis import find_pivot_high, find_pivot_low, calculate_ema_osc, emulate_trading
+from analysis import find_pivot_high, find_pivot_low, calculate_ema_osc, emulate_trading, emulate_trading_for_all
 import pandas as pd
 import json
 import os
@@ -82,3 +84,21 @@ def read_and_combine_cached_data(cache_folder_path):
     return combined_df
 
 
+@app.callback(
+    Output('content-tab-2', 'children'),
+    [Input('update-button', 'n_clicks')]
+)
+def update_combined_table(n_clicks):
+    if n_clicks is None:
+        raise dash.exceptions.PreventUpdate
+
+    cache_folder_path = 'C:/Users/Redmi/PycharmProjects/pivot_strat/cache'
+    combined_data = read_and_combine_cached_data(cache_folder_path)
+    all_trades = emulate_trading_for_all(combined_data, 100, 1)
+
+    # Преобразование результатов торговли в DataFrame для отображения в таблице
+    trades_df = pd.DataFrame(all_trades)
+    return dash_table.DataTable(
+        data=trades_df.to_dict('records'),
+        columns=[{'name': i, 'id': i} for i in trades_df.columns]
+    )
