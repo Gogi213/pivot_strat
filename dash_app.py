@@ -1,8 +1,5 @@
-# dash_app.py
 from dash import html, dcc, Input, Output, dash_table
 import dash
-
-
 from binance_api import get_top_futures_pairs, get_historical_futures_data
 import plot
 from analysis import find_pivot_high, find_pivot_low, calculate_ema_osc, emulate_trading, emulate_trading_for_all
@@ -27,7 +24,6 @@ app.layout = html.Div([
         ])
     ])
 ])
-
 
 @app.callback(
     [Output('currency-pair-graph', 'figure'),
@@ -81,6 +77,9 @@ def read_and_combine_cached_data(cache_folder_path):
                 data = json.load(file)
                 df = pd.DataFrame(data)
                 combined_df = pd.concat([combined_df, df], ignore_index=True)
+
+    # Сохранение в JSON
+    combined_df.to_json('combined_data.json', orient='records', lines=True)
     return combined_df
 
 

@@ -62,24 +62,3 @@ def create_layout_with_graph_and_list(symbols, selected_symbol):
     ], style={'display': 'flex', 'height': '100vh'})
 
     return layout
-
-# def create_breakout_statistics_table(df, breakout_candles, symbol):
-#     # Получение результатов эмуляции
-#     # results = emulate_position_tracking(df, breakout_candles)
-#
-#     # Сбор статистики
-#     total_breakouts = len(results)
-#     successful_breakouts = sum(1 for result in results if result['outcome'] == 'Successful')
-#     unsuccessful_breakouts = total_breakouts - successful_breakouts
-#     win_rate = successful_breakouts / total_breakouts if total_breakouts > 0 else 0
-#     sum_nATR_successful = sum(result['profit_loss'] for result in results if result['outcome'] == 'Successful')
-#     sum_nATR_unsuccessful = sum(result['profit_loss'] for result in results if result['outcome'] == 'Unsuccessful')
-#     total_sum = sum_nATR_successful + sum_nATR_unsuccessful
-#
-#     # Создание таблицы
-#     fig = go.Figure(data=[go.Table(
-#         header=dict(values=['Валютная пара', 'Количество пробоев', 'Успешные', 'Неуспешные', 'Винрейт', 'Сумма nATR успешных', 'Сумма nATR/2 неуспешных', 'Сумма двух предыдущих пунктов']),
-#         cells=dict(values=[[symbol], [total_breakouts], [successful_breakouts], [unsuccessful_breakouts], [f"{win_rate:.2%}"], [sum_nATR_successful], [sum_nATR_unsuccessful], [total_sum]])
-#     )])
-#
-#     return fig
