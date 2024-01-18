@@ -51,6 +51,7 @@ def get_historical_futures_data(symbol, interval='1m', limit=1500):
     df['symbol'] = symbol  # Добавляем колонку 'symbol'
     # Преобразование времени и числовых данных
     df['Open time'] = pd.to_datetime(df['Open time'], unit='ms')
+
     df['Close time'] = pd.to_datetime(df['Close time'], unit='ms')
 
     numeric_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
@@ -61,6 +62,7 @@ def get_historical_futures_data(symbol, interval='1m', limit=1500):
     df['nATR'] = calculate_natr(df)
 
     cache_manager.save_cache(df, symbol, interval)
+    df.set_index('Open time', inplace=True)
     return df
 
 def preload_data():
