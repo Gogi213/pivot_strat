@@ -4,25 +4,31 @@ import pandas as pd
 # Функции для расчета точек разворота
 def find_pivot_high(df, left_bars, right_bars):
     highs = []
+    df_index = df.index
     for i in range(left_bars, len(df) - right_bars):
-        high_range = df['High'][i-left_bars:i+right_bars+1]
-        current_high = df['High'][i]
-        if current_high == max(high_range) and (high_range == current_high).sum() == 1:
-            highs.append((df.index[i], current_high))
+        current_index = df_index[i]
+        high_range = df.loc[df_index[i - left_bars]:df_index[i + right_bars], 'High']
+        current_high = df.at[current_index, 'High']
+        if current_high == max(high_range) and list(high_range).count(current_high) == 1:
+            highs.append((current_index, current_high))
         else:
-            highs.append((df.index[i], None))
+            highs.append((current_index, None))
     return highs
+
 
 def find_pivot_low(df, left_bars, right_bars):
     lows = []
+    df_index = df.index
     for i in range(left_bars, len(df) - right_bars):
-        low_range = df['Low'][i-left_bars:i+right_bars+1]
-        current_low = df['Low'][i]
-        if current_low == min(low_range) and (low_range == current_low).sum() == 1:
-            lows.append((df.index[i], current_low))
+        current_index = df_index[i]
+        low_range = df.loc[df_index[i - left_bars]:df_index[i + right_bars], 'Low']
+        current_low = df.at[current_index, 'Low']
+        if current_low == min(low_range) and list(low_range).count(current_low) == 1:
+            lows.append((current_index, current_low))
         else:
-            lows.append((df.index[i], None))
+            lows.append((current_index, None))
     return lows
+
 
 
 def calculate_ema_osc(df):
