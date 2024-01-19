@@ -68,15 +68,15 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
     commission_market = 0.055 / 100  # Комиссия за рыночный ордер (0.055%)
 
     for i in range(left_bars + right_bars, len(df)):
-        if pivot_highs[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] < df['Open'][i - 1]:
-            # Логика для шорт позиции
+        # Измененное условие для шорт позиции на high pivot
+        if pivot_highs[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] > df['Open'][i - 1]:
             entry_price = df['Open'][i]
             tp = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
             sl = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
             is_long_position = False
 
-        elif pivot_lows[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] > df['Open'][i - 1]:
-            # Логика для лонг позиции
+        # Измененное условие для лонг позиции на low pivot
+        elif pivot_lows[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] < df['Open'][i - 1]:
             entry_price = df['Open'][i]
             tp = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
             sl = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
@@ -86,24 +86,26 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
             continue
 
         for j in range(i + 1, len(df)):
+            # Проверка достижения TP или SL
             if df['High'][j] >= tp or df['Low'][j] <= sl:
                 exit_price = df['Close'][j]
                 position_size = deposit * leverage
-                if is_long_position:
-                    profit_or_loss = (exit_price / entry_price - 1) * position_size
-                else:  # Шорт позиция
-                    profit_or_loss = (1 - exit_price / entry_price) * position_size
-
-                # Учет комиссий
+                profit_or_loss = (exit_price / entry_price - 1) * position_size if is_long_position else (1 - exit_price / entry_price) * position_size
                 profit_or_loss -= position_size * commission_market  # Комиссия на вход
                 profit_or_loss -= position_size * commission_limit   # Комиссия на выход
-
                 trades.append({'entry': entry_price, 'exit': exit_price, 'pnl': profit_or_loss})
                 break
+            else:
+                # Проверка достижения половины пути к TP
+                half_way_to_tp = entry_price + (tp - entry_price) / 2 if is_long_position else entry_price - (entry_price - tp) / 2
+                if (is_long_position and df['High'][j] >= half_way_to_tp) or (not is_long_position and df['Low'][j] <= half_way_to_tp):
+                    sl = entry_price  # Перемещение SL в "условный ноль"
 
     return trades
 
-def emulate_trading_for_all(df, left_bars, right_bars, nATR_column='nATR', deposit=100, leverage=10):
+
+
+def emulate_trading_for_all(df, left_bars, right_bars, nATR_column='nATR', deposit=3000000000000, leverage=1):
     all_trades = []
     grouped = df.groupby('symbol')  # Предполагается, что в df есть колонка 'symbol'
 
