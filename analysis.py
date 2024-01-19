@@ -104,20 +104,14 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
     return trades
 
 
-
-def emulate_trading_for_all(df, left_bars, right_bars, nATR_column='nATR', deposit=3000000000000, leverage=1):
-    all_trades = []
-    grouped = df.groupby('symbol')  # Предполагается, что в df есть колонка 'symbol'
-
-    for symbol, group in grouped:
-        trades = emulate_trading(group, left_bars, right_bars, nATR_column, deposit, leverage)
-        for trade in trades:
-            trade['symbol'] = symbol  # Добавляем информацию о символе криптовалюты к каждой сделке
-        all_trades.extend(trades)
-
-    return all_trades
-
-
-
-
-
+# def emulate_trading_for_all(df, left_bars, right_bars, nATR_column='nATR', deposit=3000000000000, leverage=1):
+#     all_trades = []
+#     grouped = df.groupby('symbol')  # Предполагается, что в df есть колонка 'symbol'
+#
+#     for symbol, group in grouped:
+#         trades = emulate_trading(group, left_bars, right_bars, nATR_column, deposit, leverage)
+#         for trade in trades:
+#             trade['symbol'] = symbol  # Добавляем информацию о символе криптовалюты к каждой сделке
+#         all_trades.extend(trades)
+#
+#     return all_trades
