@@ -52,7 +52,7 @@ def plot_breaks(df, fig, pivot_highs, pivot_lows, volume_thresh):
     return fig
 
 def calculate_tp(price, nATR):
-    return price + (price * 4 * nATR)
+    return price + (price * 2 * nATR)
 
 def calculate_sl(price, nATR):
     return price - (price * (nATR / 2.5))
@@ -65,24 +65,26 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
     pivot_lows = find_pivot_low(df, left_bars, right_bars)
 
     # Комиссии
-    commission_limit = 0.02 / 100  # Комиссия за лимитный ордер (0.02%)
-    commission_market = 0.055 / 100  # Комиссия за рыночный ордер (0.055%)
+    commission_limit = 0.02 / 100
+    commission_market = 0.055 / 100
 
-    position_open = False  # Флаг для отслеживания открытой позиции
+    position_open = False
 
-    for i in range(left_bars + right_bars, len(df)):
+    for i in range(left_bars + right_bars, len(df) - 1):  # -1 чтобы иметь доступ к следующей свече
         if position_open:
             continue
 
-        if pivot_highs[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] > df['Open'][i - 1]:
-            entry_price = df['Open'][i]
+        # Условие для шорт позиции на high pivot
+        if pivot_highs[i - left_bars - right_bars][1] is not None and df['Close'][i] > df['Open'][i]:
+            entry_price = df['Close'][i + 1]  # Цена закрытия следующей свечи
             tp = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
             sl = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
             is_long_position = False
             position_open = True
 
-        elif pivot_lows[i - left_bars - right_bars][1] is not None and df['Close'][i - 1] < df['Open'][i - 1]:
-            entry_price = df['Open'][i]
+        # Условие для лонг позиции на low pivot
+        elif pivot_lows[i - left_bars - right_bars][1] is not None and df['Close'][i] < df['Open'][i]:
+            entry_price = df['Close'][i + 1]  # Цена закрытия следующей свечи
             tp = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
             sl = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
             is_long_position = True
@@ -91,28 +93,25 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
         else:
             continue
 
-        for j in range(i + 1, len(df)):
+        for j in range(i + 2, len(df)):  # Начиная с ещё одной свечи вперёд
             if df['High'][j] >= tp or df['Low'][j] <= sl:
                 exit_price = df['Close'][j]
                 position_size = deposit * leverage
                 profit_or_loss = (exit_price / entry_price - 1) * position_size if is_long_position else (1 - exit_price / entry_price) * position_size
-                profit_or_loss -= position_size * commission_market  # Комиссия на вход
-                profit_or_loss -= position_size * commission_limit   # Комиссия на выход
+                profit_or_loss -= position_size * commission_market
+                profit_or_loss -= position_size * commission_limit
                 trades.append({
                     'entry': entry_price,
                     'exit': exit_price,
                     'pnl': profit_or_loss,
-                    'entry_index': i,  # Индекс входа
-                    'exit_index': j,   # Индекс выхода
-                    'is_profitable': profit_or_loss > 0  # Прибыльная ли сделка
+                    'entry_index': i + 1,  # Индекс входа (на следующей свече после условия)
+                    'exit_index': j,
+                    'is_profitable': profit_or_loss > 0
                 })
                 position_open = False
                 break
 
     return trades
-
-
-
 
 
 # def emulate_trading_for_all(df, left_bars, right_bars, nATR_column='nATR', deposit=3000000000000, leverage=1):
