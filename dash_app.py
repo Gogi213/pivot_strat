@@ -9,7 +9,7 @@ import os
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-volume_threshold = 50000000
+volume_threshold = 150000000
 symbols = get_top_futures_pairs(volume_threshold=volume_threshold)
 
 app.layout = html.Div([
@@ -72,36 +72,41 @@ def update_graph_and_table(*args):
 
 
 
-# def read_and_combine_cached_data(cache_folder_path):
-#     combined_df = pd.DataFrame()
-#     for filename in os.listdir(cache_folder_path):
-#         if filename.endswith('.json'):
-#             file_path = os.path.join(cache_folder_path, filename)
-#             with open(file_path, 'r') as file:
-#                 data = json.load(file)
-#                 df = pd.DataFrame(data)
-#                 combined_df = pd.concat([combined_df, df], ignore_index=True)
-#
-#     # Сохранение в JSON
-#     combined_df.to_json('combined_data.json', orient='records', lines=True)
-#     return combined_df
-#
-#
-# @app.callback(
-#     Output('content-tab-2', 'children'),
-#     [Input('update-button', 'n_clicks')]
-# )
-# def update_combined_table(n_clicks):
-#     if n_clicks is None:
-#         raise dash.exceptions.PreventUpdate
-#
-#     cache_folder_path = 'C:/Users/Redmi/PycharmProjects/pivot_strat/cache'
-#     combined_data = read_and_combine_cached_data(cache_folder_path)
-#     all_trades = emulate_trading_for_all(combined_data, 100, 1)
-#
-#     # Преобразование результатов торговли в DataFrame для отображения в таблице
-#     trades_df = pd.DataFrame(all_trades)
-#     return dash_table.DataTable(
-#         data=trades_df.to_dict('records'),
-#         columns=[{'name': i, 'id': i} for i in trades_df.columns]
-#     )
+def read_and_combine_cached_data(cache_folder_path):
+    combined_df = pd.DataFrame()
+    for filename in os.listdir(cache_folder_path):
+        if filename.endswith('.json'):
+            file_path = os.path.join(cache_folder_path, filename)
+            with open(file_path, 'r') as file:
+                for line in file:
+                    try:
+                        data = json.loads(line)
+                        df = pd.DataFrame([data])
+                        combined_df = pd.concat([combined_df, df], ignore_index=True)
+                    except json.JSONDecodeError:
+                        continue  # Пропускаем строки, которые не могут быть декодированы как JSON
+
+    # Сохранение объединённых данных в JSON
+    combined_df.to_json(os.path.join(cache_folder_path, 'combined_data.json'), orient='records', lines=True)
+    return combined_df
+
+
+
+@app.callback(
+    Output('content-tab-2', 'children'),
+    [Input('update-button', 'n_clicks')]
+)
+def update_combined_table(n_clicks):
+    if n_clicks is None:
+        raise dash.exceptions.PreventUpdate
+
+    cache_folder_path = 'C:/Users/Redmi/PycharmProjects/pivot_strat/cache'
+    combined_data = read_and_combine_cached_data(cache_folder_path)
+    trades = emulate_trading(combined_data, 100, 1, 'nATR')
+
+    # Преобразование результатов торговли в DataFrame для отображения в таблице
+    trades_df = pd.DataFrame(trades)
+    return dash_table.DataTable(
+        data=trades_df.to_dict('records'),
+        columns=[{'name': i, 'id': i} for i in trades_df.columns]
+    )
