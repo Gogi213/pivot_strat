@@ -43,10 +43,13 @@ def update_graph_and_table(*args):
     pivot_highs = find_pivot_high(df, left_bars=100, right_bars=1)
     pivot_lows = find_pivot_low(df, left_bars=100, right_bars=1)
 
-    graph = plot.plot_support_resistance_with_annotations(df, pivot_highs, pivot_lows, symbol)
-
-    # Вызов функции эмуляции торговли и расчет статистики
+    # Получение данных о сделках
     trades = emulate_trading(df, 100, 1, 'nATR')
+
+    # Отрисовка графика с маркерами сделок
+    graph = plot.plot_support_resistance_with_annotations(df, pivot_highs, pivot_lows, trades, symbol)
+
+    # Расчет статистики торговли
     trades_df = pd.DataFrame(trades)
     total_trades = len(trades_df)
     successful_trades = len(trades_df[trades_df['pnl'] > 0])
@@ -55,7 +58,7 @@ def update_graph_and_table(*args):
     total_profit = trades_df['pnl'].sum()
     profit_factor = total_profit / -trades_df[trades_df['pnl'] < 0]['pnl'].sum() if unsuccessful_trades > 0 else 'inf'
 
-    # Создание компактной таблицы статистики
+    # Создание таблицы статистики
     table = html.Div([
         html.Div(f"Всего сделок: {total_trades}", className="table-stat"),
         html.Div(f"Успешных сделок: {successful_trades}", className="table-stat"),
@@ -66,6 +69,7 @@ def update_graph_and_table(*args):
     ], className="statistics-table")
 
     return [graph, table]
+
 
 
 # def read_and_combine_cached_data(cache_folder_path):

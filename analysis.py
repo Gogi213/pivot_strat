@@ -98,11 +98,19 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
                 profit_or_loss = (exit_price / entry_price - 1) * position_size if is_long_position else (1 - exit_price / entry_price) * position_size
                 profit_or_loss -= position_size * commission_market  # Комиссия на вход
                 profit_or_loss -= position_size * commission_limit   # Комиссия на выход
-                trades.append({'entry': entry_price, 'exit': exit_price, 'pnl': profit_or_loss})
+                trades.append({
+                    'entry': entry_price,
+                    'exit': exit_price,
+                    'pnl': profit_or_loss,
+                    'entry_index': i,  # Индекс входа
+                    'exit_index': j,   # Индекс выхода
+                    'is_profitable': profit_or_loss > 0  # Прибыльная ли сделка
+                })
                 position_open = False
                 break
 
     return trades
+
 
 
 
