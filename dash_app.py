@@ -9,7 +9,7 @@ import os
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-volume_threshold = 100000000
+volume_threshold = 50000000
 symbols = get_top_futures_pairs(volume_threshold=volume_threshold)
 
 app.layout = html.Div([

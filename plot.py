@@ -20,7 +20,7 @@ def plot_support_resistance_with_annotations(df, pivot_highs, pivot_lows, trades
     for high in pivot_highs:
         if high[1] is not None:
             fig.add_shape(type='line',
-                          x0=high[0], y0=high[1], x1=df.index[min(len(df)-1, df.index.get_loc(high[0]) + 10)], y1=high[1],
+                          x0=high[0], y0=high[1], x1=df.index[min(len(df)-1, df.index.get_loc(high[0]) + 5)], y1=high[1],
                           line=dict(color='Green',),
                           xref='x', yref='y',
                           row=1, col=1)
@@ -28,7 +28,7 @@ def plot_support_resistance_with_annotations(df, pivot_highs, pivot_lows, trades
     for low in pivot_lows:
         if low[1] is not None:
             fig.add_shape(type='line',
-                          x0=low[0], y0=low[1], x1=df.index[min(len(df)-1, df.index.get_loc(low[0]) + 35)], y1=low[1],
+                          x0=low[0], y0=low[1], x1=df.index[min(len(df)-1, df.index.get_loc(low[0]) + 5)], y1=low[1],
                           line=dict(color='Red',),
                           xref='x', yref='y',
                           row=1, col=1)
@@ -36,7 +36,7 @@ def plot_support_resistance_with_annotations(df, pivot_highs, pivot_lows, trades
     # Добавление маркеров для сделок
     for trade in trades:
         entry_color = 'blue'  # Цвет маркера входа в сделку
-        exit_color = 'purple' if trade['is_profitable'] else 'cyan'  # Цвет маркера выхода из сделки
+        exit_color = 'red' if trade['is_profitable'] else 'green'  # Цвет маркера выхода из сделки
 
         # Маркер входа
         fig.add_trace(go.Scatter(

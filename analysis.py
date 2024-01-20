@@ -52,10 +52,10 @@ def plot_breaks(df, fig, pivot_highs, pivot_lows, volume_thresh):
     return fig
 
 def calculate_tp(price, nATR):
-    return price + (price * 2 * nATR)
+    return price + (price * nATR * 2)
 
 def calculate_sl(price, nATR):
-    return price - (price * (nATR / 2.5))
+    return price - (price * (nATR / 1.5))
 
     # Комиссии
 
@@ -64,27 +64,36 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
     pivot_highs = find_pivot_high(df, left_bars, right_bars)
     pivot_lows = find_pivot_low(df, left_bars, right_bars)
 
-    # Комиссии
     commission_limit = 0.02 / 100
     commission_market = 0.055 / 100
 
     position_open = False
 
-    for i in range(left_bars + right_bars, len(df) - 1):  # -1 чтобы иметь доступ к следующей свече
+    for i in range(left_bars + right_bars, len(df) - 1):
         if position_open:
             continue
 
         # Условие для шорт позиции на high pivot
         if pivot_highs[i - left_bars - right_bars][1] is not None and df['Close'][i] > df['Open'][i]:
-            entry_price = df['Close'][i + 1]  # Цена закрытия следующей свечи
-            tp = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
-            sl = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
+            if df[nATR_column][i + 1] > 1.5 / 100:
+                continue
+            entry_price = df['Close'][i + 1]
+            # Проверка, что позиция не открывается выше уровня high пика
+            if entry_price > pivot_highs[i - left_bars - right_bars][1]:
+                continue
+            tp = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
+            sl = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
             is_long_position = False
             position_open = True
 
         # Условие для лонг позиции на low pivot
         elif pivot_lows[i - left_bars - right_bars][1] is not None and df['Close'][i] < df['Open'][i]:
-            entry_price = df['Close'][i + 1]  # Цена закрытия следующей свечи
+            if df[nATR_column][i + 1] > 1.5 / 100:
+                continue
+            entry_price = df['Close'][i + 1]
+            # Проверка, что позиция не открывается ниже уровня low пика
+            if entry_price < pivot_lows[i - left_bars - right_bars][1]:
+                continue
             tp = calculate_tp(entry_price, df[nATR_column][i - left_bars - right_bars])
             sl = calculate_sl(entry_price, df[nATR_column][i - left_bars - right_bars])
             is_long_position = True
@@ -93,7 +102,7 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
         else:
             continue
 
-        for j in range(i + 2, len(df)):  # Начиная с ещё одной свечи вперёд
+        for j in range(i + 2, len(df)):
             if df['High'][j] >= tp or df['Low'][j] <= sl:
                 exit_price = df['Close'][j]
                 position_size = deposit * leverage
@@ -104,7 +113,7 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
                     'entry': entry_price,
                     'exit': exit_price,
                     'pnl': profit_or_loss,
-                    'entry_index': i + 1,  # Индекс входа (на следующей свече после условия)
+                    'entry_index': i + 1,
                     'exit_index': j,
                     'is_profitable': profit_or_loss > 0
                 })
