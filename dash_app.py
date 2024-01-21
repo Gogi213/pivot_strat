@@ -102,13 +102,13 @@ def update_combined_table(n_clicks):
         'Всего сделок': len(x),
         'Успешных сделок': len(x[x['pnl'] > 0]),
         'Неуспешных сделок': len(x[x['pnl'] <= 0]),
-        'Winrate': len(x[x['pnl'] > 0]) / len(x) if len(x) > 0 else 0,
-        'Доход': x['pnl'].sum(),
-        'Профит фактор': x['pnl'].sum() / -x[x['pnl'] < 0]['pnl'].sum() if len(x[x['pnl'] < 0]) > 0 else 'inf'
+        'Winrate': f"{len(x[x['pnl'] > 0]) / len(x) * 100:.2f}%" if len(x) > 0 else "0.00%",
+        'Доход': round(x['pnl'].sum(), 2),
+        'Профит фактор': round(x['pnl'].sum() / -x[x['pnl'] < 0]['pnl'].sum(), 2) if len(x[x['pnl'] < 0]) > 0 else 'inf'
     })).reset_index()
 
     return dash_table.DataTable(
         data=summary.to_dict('records'),
         columns=[{'name': i, 'id': i} for i in summary.columns],
-        sort_action='native'  # Включение сортировки по клику на заголовок столбца
+        sort_action='native'
     )

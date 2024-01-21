@@ -52,7 +52,7 @@ def plot_breaks(df, fig, pivot_highs, pivot_lows, volume_thresh):
     return fig
 
 def calculate_tp(price, nATR):
-    return price + (price * nATR * 2)
+    return price + (price * nATR * 1.5)
 
 def calculate_sl(price, nATR):
     return price - (price * (nATR / 1.5))
@@ -75,7 +75,7 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
 
         # Условие для шорт позиции на high pivot
         if pivot_highs[i - left_bars - right_bars][1] is not None and df['Close'][i] > df['Open'][i]:
-            if df[nATR_column][i + 1] > 1.5 / 100:
+            if df[nATR_column][i + 1] > 2.5 / 100:
                 continue
             entry_price = df['Close'][i + 1]
             # Проверка, что позиция не открывается выше уровня high пика
@@ -88,7 +88,7 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
 
         # Условие для лонг позиции на low pivot
         elif pivot_lows[i - left_bars - right_bars][1] is not None and df['Close'][i] < df['Open'][i]:
-            if df[nATR_column][i + 1] > 1.5 / 100:
+            if df[nATR_column][i + 1] > 2 / 100:
                 continue
             entry_price = df['Close'][i + 1]
             # Проверка, что позиция не открывается ниже уровня low пика
