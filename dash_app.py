@@ -104,11 +104,47 @@ def update_combined_table(n_clicks):
         'Неуспешных сделок': len(x[x['pnl'] <= 0]),
         'Winrate': f"{len(x[x['pnl'] > 0]) / len(x) * 100:.2f}%" if len(x) > 0 else "0.00%",
         'Доход': round(x['pnl'].sum(), 2),
-        'Профит фактор': round(x['pnl'].sum() / -x[x['pnl'] < 0]['pnl'].sum(), 2) if len(x[x['pnl'] < 0]) > 0 else 'inf'
+        'Профит фактор': round(x[x['pnl'] > 0]['pnl'].sum() / -x[x['pnl'] < 0]['pnl'].sum(), 2) if x[x['pnl'] < 0]['pnl'].sum() != 0 else 'inf'
     })).reset_index()
 
-    return dash_table.DataTable(
+    # Расчет общего тотала
+    total_trades = summary['Всего сделок'].sum()
+    total_successful = summary['Успешных сделок'].sum()
+    total_unsuccessful = summary['Неуспешных сделок'].sum()
+    total_winrate = f"{total_successful / total_trades * 100:.2f}%" if total_trades > 0 else "0.00%"
+    total_profit = summary['Доход'].sum()
+    total_profit_factor = round(summary[summary['Профит фактор'] != 'inf']['Профит фактор'].mean(), 2)
+
+    # Создание таблицы для тотала
+    total_summary = dash_table.DataTable(
+        data=[{
+            'symbol': 'Total',
+            'Всего сделок': total_trades,
+            'Успешных сделок': total_successful,
+            'Неуспешных сделок': total_unsuccessful,
+            'Winrate': total_winrate,
+            'Доход': total_profit,
+            'Профит фактор': total_profit_factor
+        }],
+        columns=[{'name': i, 'id': i} for i in summary.columns],
+        style_as_list_view=True,
+        style_cell={'padding': '5px'},
+        style_header={
+            'backgroundColor': 'white',
+            'fontWeight': 'bold'
+        }
+    )
+
+    return [total_summary, dash_table.DataTable(
         data=summary.to_dict('records'),
         columns=[{'name': i, 'id': i} for i in summary.columns],
-        sort_action='native'
-    )
+        sort_action='native',
+        style_as_list_view=True,
+        style_cell={'padding': '5px'},
+        style_header={
+            'backgroundColor': 'white',
+            'fontWeight': 'bold'
+        }
+    )]
+
+
