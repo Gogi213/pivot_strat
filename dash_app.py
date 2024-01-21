@@ -97,26 +97,18 @@ def update_combined_table(n_clicks):
 
     trades_df = pd.DataFrame(all_trades)
 
-    # Сохранение итогового DataFrame в JSON для отладки
-    output_json_path = 'C:/Users/Redmi/PycharmProjects/pivot_strat/output.json'
-    trades_df.to_json(output_json_path, orient='records', lines=True)
+    # Создание итоговой таблицы
+    summary = trades_df.groupby('symbol').apply(lambda x: pd.Series({
+        'Всего сделок': len(x),
+        'Успешных сделок': len(x[x['pnl'] > 0]),
+        'Неуспешных сделок': len(x[x['pnl'] <= 0]),
+        'Winrate': len(x[x['pnl'] > 0]) / len(x) if len(x) > 0 else 0,
+        'Доход': x['pnl'].sum(),
+        'Профит фактор': x['pnl'].sum() / -x[x['pnl'] < 0]['pnl'].sum() if len(x[x['pnl'] < 0]) > 0 else 'inf'
+    })).reset_index()
 
-    # Проверка наличия столбца 'symbol' в итоговом DataFrame
-    if 'symbol' not in trades_df.columns:
-        print("Столбец 'symbol' отсутствует в trades_df")
-        return "Ошибка: Столбец 'symbol' отсутствует в итоговых данных"
-    else:
-        # Создание итоговой таблицы
-        summary = trades_df.groupby('symbol').apply(lambda x: pd.Series({
-            'Всего сделок': len(x),
-            'Успешных сделок': len(x[x['pnl'] > 0]),
-            'Неуспешных сделок': len(x[x['pnl'] <= 0]),
-            'Winrate': len(x[x['pnl'] > 0]) / len(x) if len(x) > 0 else 0,
-            'Доход': x['pnl'].sum(),
-            'Профит фактор': x['pnl'].sum() / -x[x['pnl'] < 0]['pnl'].sum() if len(x[x['pnl'] < 0]) > 0 else 'inf'
-        })).reset_index()
-
-        return dash_table.DataTable(
-            data=summary.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in summary.columns]
-        )
+    return dash_table.DataTable(
+        data=summary.to_dict('records'),
+        columns=[{'name': i, 'id': i} for i in summary.columns],
+        sort_action='native'  # Включение сортировки по клику на заголовок столбца
+    )
