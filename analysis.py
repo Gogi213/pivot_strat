@@ -115,7 +115,8 @@ def emulate_trading(df, left_bars, right_bars, nATR_column='nATR', deposit=100, 
                     'pnl': profit_or_loss,
                     'entry_index': i + 1,
                     'exit_index': j,
-                    'is_profitable': profit_or_loss > 0
+                    'is_profitable': profit_or_loss > 0,
+                    'symbol': df['symbol'].iloc[0]  # Добавляем символ валютной пары
                 })
                 position_open = False
                 break
